@@ -9,6 +9,7 @@ export async function getTokenFun() {
       ? "__Secure-next-auth.session-token"
       : "next-auth.session-token";
 
+   
   const sessionToken = cookieStore.get(cookieName)?.value;
   if (!sessionToken) throw new Error("unauthorized");
 
