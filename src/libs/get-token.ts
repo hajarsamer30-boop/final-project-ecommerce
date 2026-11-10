@@ -1,20 +1,22 @@
 import { decode } from "next-auth/jwt";
 import { cookies } from "next/headers";
 
-
 export async function getTokenFun() {
-  const cookie = await cookies();
+  const cookieStore = await cookies();
 
-  const node = process.env.NODE_ENV=='production' ?'__Secure-next-auth.session-token':"next-auth.session-token"
+  const cookieName =
+    process.env.NODE_ENV === "production"
+      ? "__Secure-next-auth.session-token"
+      : "next-auth.session-token";
 
-  const token = cookie.get(node)?.value;
+  const sessionToken = cookieStore.get(cookieName)?.value;
+  if (!sessionToken) throw new Error("unauthorized");
 
-  if (!token) throw new Error("unauthorized");
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) throw new Error("NEXTAUTH_SECRET is missing");
 
-  const decodedTokn = await decode({
-      secret: process.env.NEXTAUTH_SECRET!,
-      token: token,
-  });
+  const decoded = await decode({ secret, token: sessionToken });
+  if (!decoded?.token) throw new Error("unauthorized");
 
-  return decodedTokn?.token;
+  return decoded.token;
 }
