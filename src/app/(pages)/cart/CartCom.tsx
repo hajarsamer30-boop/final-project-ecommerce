@@ -2,14 +2,14 @@
 
 import { Loading } from "@/components/ui/Loading";
 import { CartRes } from "@/interfaces/cart/cart.interface";
-import {  useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Minus, Plus, ShoppingBag, ShoppingCart } from "lucide-react";
 import Text from "@/components/ui/Text";
 import { updateCountCart } from "./actions/update-cart.action";
-import { Spinner } from "@/components/ui/spinner"
+
 
 type CartProduct = {
   _id?: string;
@@ -41,52 +41,33 @@ export default function CartCom() {
     },
   });
 
-  if (isLoading) return <Loading />;
-
-  if (isError) {
-    return (
-      <section className="mx-auto w-full max-w-7xl px-4 py-16 text-center sm:px-6">
-        <p className="text-muted-foreground"><Text id="somethingWentWrong" /></p>
-        <button onClick={() => void refetch()} className="mt-4 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
-          <Text id="retry" />
-        </button>
-      </section>
-    );
-  }
-type pageProps={
- productId:string,
- count:number   
-}
-
-  // update mutation
-
- const queryClient = useQueryClient()
-  const {mutate,isPending,data:updateddata} = useMutation<CartRes,Error,pageProps>({
-    mutationFn:updateCountCart,
-    onSuccess:()=>{
-    queryClient.invalidateQueries({queryKey:['cart']})
+  const queryClient = useQueryClient()
+  const { mutate, isPending, data: updateddata } = useMutation<CartRes, Error, pageProps>({
+    mutationFn: updateCountCart,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart'] })
     },
-    onError:(error)=>{
-
+    onError: (error) => {
+      console.log(error)
     }
   })
 
 
-  function increase(count:number,productId:string)
-  {
-    mutate({productId,count:count+1})
+
+  type pageProps = {
+    productId: string,
+    count: number
   }
 
-  function decrease(count:number,productId:string)
-  {
-    mutate({productId,count:count-1})
+  // update mutation
+
+  function increase(count: number, productId: string) {
+    mutate({ productId, count: count + 1 })
   }
 
-  console.log(updateddata);
-  
-
-
-
+  function decrease(count: number, productId: string) {
+    mutate({ productId, count: count - 1 })
+  }
 
   const cart = data?.payload?.data;
   const products = (cart?.products ?? []) as CartLine[];
@@ -115,6 +96,20 @@ type pageProps={
 
   const subtotal = products.reduce((sum, item, index) => sum + item.price * getCount(item, index), 0);
 
+
+  if (isLoading) return <Loading />;
+
+  if (isError) {
+    return (
+      <section className="mx-auto w-full max-w-7xl px-4 py-16 text-center sm:px-6">
+        <p className="text-muted-foreground"><Text id="somethingWentWrong" /></p>
+        <button onClick={() => void refetch()} className="mt-4 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
+          <Text id="retry" />
+        </button>
+      </section>
+    );
+  }
+
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
@@ -132,7 +127,7 @@ type pageProps={
           </div>
           <ul className="divide-y divide-border">
             {products.map((item, index) => {
-              
+
               const product = item.product ?? item;
               const lineKey = getLineKey(item, index);
               const count = getCount(item, index);
@@ -149,25 +144,25 @@ type pageProps={
                     </div>
                   </div>
                   <div className="flex items-center gap-3 sm:justify-center" aria-label="Quantity controls">
-                   {/* decrease */}
+                    {/* decrease */}
                     <button
                       type="button"
                       aria-label="Decrease quantity"
-                     
-                      onClick={()=>decrease(count,item.product?.id!)}
+
+                      onClick={() => decrease(count, item.product?.id!)}
                       className="flex size-8 items-center justify-center rounded-full border border-border text-foreground transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
                     ><Minus aria-hidden="true" className="size-4" /></button>
 
 
-                    <span className="min-w-6 text-center text-sm font-semibold text-foreground" aria-live="polite">{ isPending? 'loading...' : count}  </span>
+                    <span className="min-w-6 text-center text-sm font-semibold text-foreground" aria-live="polite">{isPending ? 'loading...' : count}  </span>
 
                     {/* increase */}
                     <button
 
-                      
+
                       type="button"
                       aria-label="Increase quantity"
-                      onClick={()=>{increase(count,product._id!)}}
+                      onClick={() => { increase(count, product._id!) }}
                       className="flex size-8 items-center justify-center rounded-full border border-border text-foreground transition hover:border-primary hover:text-primary"
                     ><Plus aria-hidden="true" className="size-4" /></button>
                   </div>
@@ -188,9 +183,9 @@ type pageProps={
             <div className="flex justify-between gap-4 text-muted-foreground"><span><Text id="shipping" /></span><span className="font-medium text-primary"><Text id="calculatedAtCheckout" /></span></div>
           </div>
           <div className="flex justify-between gap-4 pt-5 text-base font-bold text-foreground"><span><Text id="totalPrice" /></span><span>{formatPrice(subtotal)}</span></div>
-          
-           <Link href={`/chekout/${cart?._id.toString()}`} className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:opacity-80"><ArrowRight aria-hidden="true" className="size-4 rotate-180 rtl:rotate-0" />Checkout</Link>
-  
+
+          <Link href={`/chekout/${cart?._id.toString()}`} className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:opacity-80"><ArrowRight aria-hidden="true" className="size-4 rotate-180 rtl:rotate-0" />Checkout</Link>
+
 
           <p className="mt-3 text-center text-xs leading-5 text-muted-foreground"><Text id="checkoutComingSoon" /></p>
         </aside>
